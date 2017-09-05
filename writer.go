@@ -34,7 +34,9 @@ func (f *FileLogger) logWriter() {
 
 			f.p(str)
 		case <-seqTimer.C:
-			f.p(fmt.Sprintf("================ LOG SEQ SIZE:%v ==================", len(f.logChan)))
+			if len(f.logChan) != 0 {
+				f.p(fmt.Sprintf("================ LOG SEQ SIZE:%v ==================", len(f.logChan)))
+			}
 		}
 	}
 }
