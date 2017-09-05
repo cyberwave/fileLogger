@@ -8,6 +8,7 @@ package fileLogger
 import (
 	"os"
 	"path/filepath"
+	"fmt"
 )
 
 // Determine a file or a path exists in the os
@@ -20,6 +21,16 @@ func isExist(path string) bool {
 func joinFilePath(path, file string) string {
 	return filepath.Join(path, file)
 }
+
+func createDir( path string ){
+	os.Mkdir( path, 0755)
+}
+
+func createFile( fileName string )( file *os.File, err error ){
+	file, err = os.OpenFile( fileName, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0666)
+	return
+}
+
 
 // return length in bytes for regular files
 func fileSize(file string) int64 {
