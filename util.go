@@ -31,11 +31,11 @@ func createFile( fileName string )( file *os.File, err error ){
 	return
 }
 
-
 // return length in bytes for regular files
 func fileSize(file string) int64 {
 	f, e := os.Stat(file)
 	if e != nil {
+		fmt.Println(e.Error())
 		return 0
 	}
 
