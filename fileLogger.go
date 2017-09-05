@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"sync"
 	"time"
+	"fmt"
 )
 
 const (
@@ -160,10 +161,10 @@ func (f *FileLogger) initLoggerBySize() {
 
 	if !f.isMustSplit() {
 		if !isExist(f.fileDir) {
-			os.Mkdir(f.fileDir, 0755)
+			createDir(f.fileDir)
 		}
-		f.logFile, _ = os.OpenFile(logFile, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0666)
-		f.lg = log.New(f.logFile, f.prefix, log.LstdFlags|log.Lmicroseconds)
+		
+		f.CreateFile()
 	} else {
 		f.split()
 	}
@@ -174,20 +175,17 @@ func (f *FileLogger) initLoggerBySize() {
 
 // init fileLogger split by daily
 func (f *FileLogger) initLoggerByDaily() {
-
 	t, _ := time.Parse(DATEFORMAT, time.Now().Format(DATEFORMAT))
 
 	f.date = &t
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
-	logFile := joinFilePath(f.fileDir, f.fileName)
 	if !f.isMustSplit() {
 		if !isExist(f.fileDir) {
-			os.Mkdir(f.fileDir, 0755)
+			createDir(f.fileDir)
 		}
-		f.logFile, _ = os.OpenFile(logFile, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0666)
-		f.lg = log.New(f.logFile, f.prefix, log.LstdFlags|log.Lmicroseconds)
+		f.CreateFile()
 	} else {
 		f.split()
 	}
@@ -221,7 +219,6 @@ func (f *FileLogger) isMustSplit() bool {
 
 // Split fileLogger
 func (f *FileLogger) split() {
-
 	logFile := joinFilePath(f.fileDir, f.fileName)
 
 	switch f.splitType {
@@ -294,6 +291,29 @@ func (f *FileLogger) fileCheck() {
 
 		f.split()
 	}
+	
+	// if dest dir and files doesn't exist any more,create it
+	if !isExist(f.fileDir){
+		f.mu.Lock()
+		defer f.mu.Unlock()
+		createDir(f.fileDir)
+	}
+
+	if !isExist(joinFilePath(f.fileDir, f.fileName)) {
+		f.mu.Lock()
+		defer f.mu.Unlock()
+		f.CreateFile()
+	}
+}
+
+func (f *FileLogger) CreateFile(){
+	var err error
+	f.logFile.Close()
+	f.logFile, err = createFile(joinFilePath(f.fileDir,f.fileName))
+	if err != nil {
+		fmt.Println("openfile faile:"+err.Error())
+	}
+	f.lg = log.New(f.logFile,f.prefix,log.LstdFlags|log.Lmicroseconds)
 }
 
 // passive to close fileLogger
